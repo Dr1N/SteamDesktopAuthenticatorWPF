@@ -1,0 +1,289 @@
+﻿<Window x:Class="Authenticator.AuthenticatorWindow"
+        Name="MW"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:nud="clr-namespace:ControlLib;assembly=NumericUpDown"
+        xmlns:converters="clr-namespace:Authenticator.GUI.Converters"
+        xmlns:tb="http://www.hardcodet.net/taskbar"
+        mc:Ignorable="d"
+        Title="Authenticator" 
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="CanResize"
+        SnapsToDevicePixels="True"
+        ShowActivated="True"
+        Icon="/Resources/Images/icon.ico"
+        MinWidth="550"
+        MinHeight="300"
+        Height="500" 
+        Width="600">
+
+    <Window.Resources>
+        <converters:InverseBooleanConverter x:Key="InverseBoolean"/>
+        <ContextMenu x:Key="ActionsMenuKey"
+                     Name="ActionsMenu">
+            <MenuItem Name="UpdateConfirmationMenu"
+                      Header="Update" 
+                      ToolTip="Update Confirmations"
+                      Click="UpdateConfirmationMenu_Click"/>
+            <MenuItem Name="AcceptAllMenu"
+                      Header="Accept all" 
+                      ToolTip="Accept all waiting confirmations"
+                      Click="AcceptAllMenu_Click"/>
+            <MenuItem Name="DeclineAllMenu"
+                      Header="Decline all" 
+                      ToolTip="Decline all waiting confirmations"
+                      Click="DeclineAllMenu_Click"/>
+        </ContextMenu>
+        <ContextMenu x:Key="ConfirmationContextMenu"
+                     Name="ConfirmationContextMenu">
+            <MenuItem Name="AcceptMenu" 
+                      Header="Accept"
+                      Click="AcceptMenu_Click"/>
+            <MenuItem Name="DelineMenu" 
+                      Header="Decline"
+                      Click="DeclineMenu_Click"/>
+        </ContextMenu>
+        <tb:TaskbarIcon x:Key="AuthenticatorNotyfyIcon"
+                        IconSource="/Resources/Images/icon.ico"
+                        MenuActivation="RightClick"
+                        NoLeftClickDelay="True"
+                        Visibility="Collapsed">
+            <tb:TaskbarIcon.ContextMenu>
+                <ContextMenu Name="TaskBarContextMenu"
+                             Opened="TaskBarContextMenu_Opened">
+                    <MenuItem x:Name="TaskBarShowTaskMenu"
+                              Header="Show Window"
+                              Click="TaskBarShowTaskMenu_Click"/>
+                    <Separator />
+                    <MenuItem x:Name="CopyGuardCode"
+                              Header="Copy Code"
+                              ToolTip="Copy Guard Code To Clipboard"
+                              Click="CopyGuardCode_Click"/>
+                    <MenuItem x:Name="TaskBarUpdateMenu"
+                              Header="Update"
+                              ToolTip="Update Confirmations"
+                              Click="TaskBarUpdateMenu_Click"/>
+                    <MenuItem x:Name="TaskBarAcceptMenu"
+                              Header="Accept All"
+                              ToolTip="Accept All Confirmations"
+                              Click="TaskBarAcceptMenu_Click"/>
+                    <MenuItem x:Name="TaskBarDeclineMenu"
+                              Header="Decline All"
+                              ToolTip="Decline All Confirmtions"
+                              Click="TaskBarDeclineMenu_Click"/>
+                    <Separator/>
+                    <MenuItem x:Name="TaskBarAutoUpdateMenu"
+                              Header="Auto Update"
+                              IsCheckable="True"/>
+                    <MenuItem x:Name="TaskBarAutoConfirmMenu"
+                              Header="Auto Confirmation"
+                              IsCheckable="True"/>
+                    <MenuItem x:Name="TaskBarNotificationMenu"
+                              Header="Notifications"
+                              IsCheckable="True"/>
+                    <Separator/>
+                    <MenuItem x:Name="ExitTaskMenu"
+                              Header="Exit"
+                              Click="ExitTaskMenu_Click"/>
+                </ContextMenu>
+            </tb:TaskbarIcon.ContextMenu>
+        </tb:TaskbarIcon>
+    </Window.Resources>
+
+    <DockPanel LastChildFill="True">
+        <Menu DockPanel.Dock="Top" 
+              Name="MainMenu"
+              Height="20"
+              VerticalContentAlignment="Center">
+            <MenuItem Header="_File" 
+                      Height="20">
+                <MenuItem Name="NewMenu"
+                          Header="_New..."
+                          Click="NewMenu_Click"/>
+                <Separator/>
+                <MenuItem Name="ExitMenu"
+                          Header="E_xit"
+                          Click="ExitMenu_Click"/>
+            </MenuItem>
+            <MenuItem Name="SettingsMenu"
+                      Header="_Settings"
+                      Height="20">
+                <MenuItem Name="AutoUpdateMenu"
+                          IsCheckable="True">
+                    <MenuItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Auto Update"
+                                       Margin="0,0,10,0"
+                                       VerticalAlignment="Center"
+                                       ToolTip="Update confirmations automatically"/>
+                            <nud:NumericUpDown Name="TimeoutNumBox"
+                                               ToolTip="Update and Confimation Timeout"
+                                               Value="10"
+                                               Width="30" 
+                                               Height="20"
+                                               BorderBrush="LightGray"
+                                               IsEnabled="{Binding IsChecked, ElementName=AutoUpdateMenu, Converter={StaticResource InverseBoolean}}" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
+                <MenuItem Name="AutoConfirmationMenu"
+                          Header="Auto _Confirmation"
+                          IsCheckable="True"
+                          IsEnabled="{Binding IsChecked, ElementName=AutoUpdateMenu}"/>
+                <MenuItem Name="ShowNotificationMenu"
+                          Header="Show _Notifications"
+                          ToolTip="Show Notifications In Minimized Mode"
+                          IsCheckable="True"
+                          IsChecked="True"/>
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Name="LogsMenu"
+                          Header="Logs"
+                          Click="LogsMenu_Click"/>
+                <MenuItem Name="HistoryMenu"
+                          Header="_History"
+                          Click="HistoryMenu_Click"/>
+                <Separator/>
+                <MenuItem Name="AboutMenu"
+                          Header="_About"
+                          Click="AboutMenu_Click"/>
+            </MenuItem>
+        </Menu>
+        <StatusBar DockPanel.Dock="Bottom"
+                   Height="30"
+                   HorizontalAlignment="Stretch"
+                   HorizontalContentAlignment="Stretch"
+                   VerticalContentAlignment="Stretch">
+            <StatusBarItem>
+                <Label Content="Status:"
+                       MinWidth="50"/>
+            </StatusBarItem>
+            <StatusBarItem>
+                <TextBlock Name="StatusBox"
+                           MinWidth="300"
+                           HorizontalAlignment="Stretch"
+                           FontWeight="Bold"
+                           TextWrapping="NoWrap"/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+            <Rectangle Name="IndicatorRect"
+                       Width="10"
+                       Height="10"
+                       RadiusX="5"
+                       RadiusY="5"
+                       Margin="0,0,5,0"
+                       Fill="Black"/>
+            </StatusBarItem>
+        </StatusBar>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <GroupBox Grid.Row="0" 
+                      Header="Guard Code"
+                      Padding="5"
+                      Margin="5">
+                <StackPanel Orientation="Vertical">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0"
+                             Name="GuardCodeBox"
+                             Height="30"
+                             TextWrapping="NoWrap"
+                             TextAlignment="Center"
+                             FontWeight="Bold"
+                             Text="Loading..."
+                             FontSize="18"
+                             IsReadOnly="True"
+                             Margin="0,0,3,0"/>
+                    <Button Grid.Column="1" 
+                            Name="CopyCodeButton"
+                            MinWidth="50"
+                            Content="Copy"
+                            IsEnabled="False"
+                            ToolTip="Copy Guard Code To Clipboard" 
+                            Click="CopyCodeButton_Click"/>
+                </Grid>
+                <ProgressBar Name="GuardCodeProgressBar"
+                             Minimum="0" 
+                             Maximum="30"
+                             Value="30"
+                             MinHeight="5"
+                             Margin="0,2,0,0"/>
+                </StackPanel>
+            </GroupBox>
+            <GroupBox Grid.Row="1"
+                      Header="Confirmations"
+                      Padding="5"
+                      Margin="5">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="30"/>
+                    </Grid.RowDefinitions>
+                    <ListView Grid.Row="0"
+                              Name="ConfirmationList"
+                              SelectionMode="Single">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="{x:Type ListViewItem}" >
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.View>
+                            <GridView>
+                                <!--
+                                <GridViewColumn Header="ID"
+                                                DisplayMemberBinding="{Binding Number}"
+                                                Width="40"/>
+                                -->
+                                <GridViewColumn Header="ID" 
+                                                DisplayMemberBinding="{Binding DisplayID}"
+                                                Width="150"/>
+                                <!--
+                                <GridViewColumn Header="Key"
+                                                DisplayMemberBinding="{Binding DisplayKey}"
+                                                Width="100"/>
+                                <GridViewColumn Header="Creator"
+                                                DisplayMemberBinding="{Binding DisplayCreator}"
+                                                Width="100"/>
+                                -->
+                                <GridViewColumn Header="Type"
+                                                DisplayMemberBinding="{Binding DisplayType}"
+                                                Width="140"/>
+                                <GridViewColumn Header="Status"
+                                                DisplayMemberBinding="{Binding Status}"
+                                                Width="150"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                    <StackPanel Grid.Row="1" 
+                                Orientation="Horizontal">
+                        <Button Name="ActionButton"
+                                ContextMenu="{StaticResource ActionsMenuKey}"
+                                ContextMenuService.IsEnabled="False"
+                                ToolTip="Click to select action"
+                                Height="20"
+                                Margin="0,5,5,5"
+                                Padding="3,0"
+                                Content="Actions..."
+                                Click="ActionButton_Click"/>
+                        <Button Name="CleanButton"
+                                ToolTip="Click to clean confirmation list"
+                                Height="20"
+                                Margin="0,5,5,5"
+                                Padding="3,0"
+                                Content="Clean"
+                                Click="CleanButton_Click"/>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+        </Grid>
+    </DockPanel>
+</Window>

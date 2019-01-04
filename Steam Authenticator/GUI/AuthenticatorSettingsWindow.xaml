@@ -1,0 +1,85 @@
+﻿<Window x:Class="Authenticator.AuthenticatorSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Authenticator Settings" 
+        MaxHeight="200"
+        Height="150"
+        MinHeight="100"
+        Width="410"
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Icon="/Resources/Images/icon.ico"
+        ShowActivated="True"
+        SnapsToDevicePixels="True">
+    <Grid HorizontalAlignment="Stretch"
+          VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="35"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" 
+                    Name="FilePathPanel"
+                    Orientation="Horizontal">
+            <Label VerticalAlignment="Center"
+                   MinWidth="80"
+                   Margin="0,0,10,0"
+                   Content="Account File:"
+                   ToolTip="Account Mobile Authenticator File"/>
+            <Label Name="FilePathBox"
+                   ToolTip="{Binding Content, RelativeSource={RelativeSource Self}}"
+                   VerticalAlignment="Center"
+                   VerticalContentAlignment="Center"
+                   HorizontalContentAlignment="Center"
+                   MinWidth="265"
+                   MaxWidth="265"
+                   BorderThickness="1"
+                   BorderBrush="Gray"
+                   Height="32"
+                   Margin="0,0,5,0"
+                   FontWeight="Bold" />
+            <Button Name="SelectFileButton"
+                    Content="..."
+                    MinWidth="30"
+                    Height="32"
+                    VerticalAlignment="Center" 
+                    ToolTip="Click to select maFile"
+                    Click="SelectFileButton_Click"/>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Orientation="Horizontal"
+                    Name="PasswordPanel"
+                    Visibility="Visible">
+            <Label VerticalAlignment="Center"
+                   MinWidth="80"
+                   Margin="0,0,10,0"
+                   Content="Password:"/>
+            <PasswordBox Name="PasswordBox"
+                         ToolTip="Account password for relogin if needed"
+                         VerticalAlignment="Center"
+                         HorizontalContentAlignment="Center"
+                         VerticalContentAlignment="Center"
+                         Height="32"
+                         MinWidth="300"/>
+        </StackPanel>
+        <StackPanel Grid.Row="2" 
+                    Orientation="Horizontal"
+                    FlowDirection="RightToLeft">
+            <Button Name="CancelButton"
+                    IsCancel="True"
+                    Content="Cancel"
+                    Margin="5"
+                    MinWidth="50" 
+                    Click="CancelButton_Click"/>
+            <Button Name="OkButton"
+                    IsDefault="True"
+                    Content="Ok"
+                    Margin="5"
+                    MinWidth="50" 
+                    Click="OkButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
