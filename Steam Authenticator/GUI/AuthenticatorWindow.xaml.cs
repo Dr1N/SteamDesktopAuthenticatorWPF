@@ -765,6 +765,10 @@ namespace Authenticator
 
         private void SetIndicatorColor(AuthenticatorState state)
         {
+            if (!Authenticator.AutoUpdate)
+            {
+                return;
+            }
             Brush current = Brushes.Transparent;
             switch (state)
             {

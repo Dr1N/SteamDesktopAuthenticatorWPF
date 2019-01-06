@@ -145,6 +145,7 @@ namespace Authenticator.Core
                 _isAutoConfirm = autoConfirm;
                 _timeout = timeout;
                 int errorCounter = 0;
+                var error = false;
                 while (!cancellationToken.IsCancellationRequested && !disposedValue)
                 {
                     try
@@ -154,6 +155,8 @@ namespace Authenticator.Core
                         if (!success && (++errorCounter > MaxErrors))
                         {
                             State = AuthenticatorState.Error;
+                            error = true;
+                            break;
                         }
                         else
                         {
@@ -180,7 +183,7 @@ namespace Authenticator.Core
                     }
                 }
                 _isAutoUpdate = false;
-                State = AuthenticatorState.Ready;
+                State = error ? AuthenticatorState.Error : AuthenticatorState.Ready;
                 _autoupdateSemaphore.Release();
             });
         }
@@ -207,9 +210,9 @@ namespace Authenticator.Core
         {
             return Task.Run(async () => 
             {
-                _updateSemaphore.Wait();
                 try
                 {
+                    _updateSemaphore.Wait();
                     _isUpdateInProcess = true;
                     App.Logger.Trace($"Authenticator.UpdateConfirmations");
                     State = AuthenticatorState.ConfimationUpdating;
@@ -220,12 +223,14 @@ namespace Authenticator.Core
                         State = AuthenticatorState.ConfimationUpdated;
                         _lastUpdate = DateTime.Now;
                         ConfirmationsEvent.Invoke(this, new AuthenticatorConfirmationsEventArgs(ConfirmationActionResult.Added, ConfirmationsSource.Count - beforeCount));
+
                         return true;
                     }
                     else
                     {
                         App.Logger.Error($"Authenticator.UpdateConfirmationsAsync Error");
                         State = AuthenticatorState.ConfimationError;
+
                         return false;
                     }
                 }
