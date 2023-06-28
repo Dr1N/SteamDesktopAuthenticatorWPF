@@ -81,10 +81,10 @@ namespace Authenticator
             Title += $" [{App.SteamGuardHelper.CurrentSteamGuard.AccountName}]";
 
             SubscribeToAuthenticatorEvents();
-           
+
             SetGuardCodeValue();
             GuardCodeTimer.Start();
-            InizializeAuthenticator();
+            InitializeAuthenticator();
 
             SubscribeToMenuEvents();
             SubscribeOther();
@@ -94,7 +94,7 @@ namespace Authenticator
         {
             UnsubscribeFromAuthenticatorEvents();
             UnsubscribeFromMenuEvents();
-            UnsubsribeOther();
+            UnsubscribeOther();
             GuardCodeTimer.Stop();
             CancelToken(_updateConfirmationsCancellationTokenSource);
             CancelToken(_processConfirmationCancellationTokenSource);
@@ -190,7 +190,7 @@ namespace Authenticator
             }
         }
 
-        private void UnsubsribeOther()
+        private void UnsubscribeOther()
         {
             GuardCodeTimer.Elapsed -= GuardCodeTimer_Tick;
             TaskbarIcon.TrayBalloonTipClicked -= TaskbarIcon_TrayBalloonTipClicked;
@@ -322,20 +322,20 @@ namespace Authenticator
         private void Authenticator_ConfirmationsEvent(object sender, AuthenticatorConfirmationsEventArgs e)
         {
             if (e.Count == 0) return;
-           
+
             switch (e.Action)
             {
                 case ConfirmationActionResult.Fetched:
-                    ShowBallon($"Fetched {e.Count} Confirmations");
+                    ShowBalloon($"Fetched {e.Count} Confirmations");
                     break;
                 case ConfirmationActionResult.Added:
-                    ShowBallon($"Added {e.Count} Confirmations");
+                    ShowBalloon($"Added {e.Count} Confirmations");
                     break;
                 case ConfirmationActionResult.Accept:
-                    ShowBallon($"Accepted {e.Count} Confirmations");
+                    ShowBalloon($"Accepted {e.Count} Confirmations");
                     break;
                 case ConfirmationActionResult.Decline:
-                    ShowBallon($"Declined {e.Count} Confirmations");
+                    ShowBalloon($"Declined {e.Count} Confirmations");
                     break;
                 default:
                     break;
@@ -343,7 +343,7 @@ namespace Authenticator
         }
 
         #endregion
-        
+
         #region Timer Callback
 
         private void GuardCodeTimer_Tick(object sender, EventArgs e)
@@ -368,7 +368,7 @@ namespace Authenticator
 
         private void SettingsMenu_SubmenuOpened(object sender, RoutedEventArgs e)
         {
-            SetStateMenuItems(SettingsMenu.ContextMenu, !Authenticator.ConfirmationsPocessed);
+            SetStateMenuItems(SettingsMenu.ContextMenu, !Authenticator.ConfirmationsProcess);
         }
 
         private void TaskBarContextMenu_Opened(object sender, RoutedEventArgs e)
@@ -379,7 +379,7 @@ namespace Authenticator
                 foreach (var item in TaskbarIcon.ContextMenu.Items)
                 {
                     if (!(item is MenuItem)) continue;
-                    
+
                     MenuItem currentItem = item as MenuItem;
                     if (currentItem.Name == "TaskBarNotificationMenu")
                     {
@@ -391,9 +391,9 @@ namespace Authenticator
                     }
                     else if (currentItem.Name == "TaskBarAcceptMenu" || currentItem.Name == "TaskBarDeclineMenu")
                     {
-                        currentItem.IsEnabled = Authenticator.AutoConfirm == false 
-                            && Authenticator.UpdateInProcess == false 
-                            && Authenticator.ConfirmationsPocessed == false;
+                        currentItem.IsEnabled = Authenticator.AutoConfirm == false
+                            && Authenticator.UpdateInProcess == false
+                            && Authenticator.ConfirmationsProcess == false;
                     }
                     else if (currentItem.Name == "TaskBarAutoUpdateMenu")
                     {
@@ -427,7 +427,7 @@ namespace Authenticator
 
         private void CleanButton_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("Clean confiramtions list?", Title, MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.OK)
+            if (MessageBox.Show("Clean confirmations list?", Title, MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.OK)
             {
                 Authenticator.CleanConfirmations();
             }
@@ -503,12 +503,12 @@ namespace Authenticator
         {
             CancelToken(_updateConfirmationsCancellationTokenSource);
         }
-        
+
         private async void AutoConfirmationMenu_Checked(object sender, RoutedEventArgs e)
         {
             CancelToken(_updateConfirmationsCancellationTokenSource);
-            if (AutoConfirmationMenu.IsChecked 
-                && AutoConfirmationMenu.IsEnabled 
+            if (AutoConfirmationMenu.IsChecked
+                && AutoConfirmationMenu.IsEnabled
                 && AutoConfirmationMenu.IsChecked)
             {
                 await StartAuthenticator();
@@ -525,7 +525,7 @@ namespace Authenticator
         }
 
         private void LogsMenu_Click(object sender, RoutedEventArgs e)
-        {           
+        {
             try
             {
                 var logDirectory = new DirectoryInfo("logs");
@@ -536,7 +536,7 @@ namespace Authenticator
                 if (file != null)
                 {
                     Process.Start(TextEditorPath, file.FullName);
-                }               
+                }
             }
             catch (Exception)
             {
@@ -664,14 +664,14 @@ namespace Authenticator
 
         private void InitializeTaskBarIcon()
         {
-            if (FindResource("AuthenticatorNotyfyIcon") is TaskbarIcon taskbarIcon)
+            if (FindResource("AuthenticatorNotifyIcon") is TaskbarIcon taskbarIcon)
             {
                 _taskbarIcon = taskbarIcon;
             }
             _taskbarIcon.LeftClickCommand = new ShowWindowCommand(this);
         }
 
-        private void InizializeAuthenticator()
+        private void InitializeAuthenticator()
         {
             AutoUpdateMenu.IsChecked = Authenticator.AutoUpdate;
             AutoConfirmationMenu.IsChecked = Authenticator.AutoConfirm;
@@ -727,13 +727,13 @@ namespace Authenticator
                 case AuthenticatorState.Wait:
                     SetStatusMessage($"Waiting. Last Update: {Authenticator.LastUpdateTime}");
                     break;
-                case AuthenticatorState.ConfimationUpdating:
+                case AuthenticatorState.ConfirmationUpdating:
                     SetStatusMessage("Confirmation Updating...");
                     break;
-                case AuthenticatorState.ConfimationUpdated:
+                case AuthenticatorState.ConfirmationUpdated:
                     SetStatusMessage($"Confirmation Updating Сompleted. Confirmations: [{Authenticator.ConfirmationsSource.Count}] Last Update: [{Authenticator.LastUpdateTime}]");
                     break;
-                case AuthenticatorState.ConfimationError:
+                case AuthenticatorState.ConfirmationError:
                     SetStatusMessage($"Confirmation Updating Error");
                     break;
                 case AuthenticatorState.ConfirmationProcessing:
@@ -777,12 +777,12 @@ namespace Authenticator
                     break;
                 case AuthenticatorState.Error:
                 case AuthenticatorState.ReloginError:
-                case AuthenticatorState.ConfimationError:
+                case AuthenticatorState.ConfirmationError:
                     current = Brushes.Red;
                     break;
                 case AuthenticatorState.Wait:
-                case AuthenticatorState.ConfimationUpdating:
-                case AuthenticatorState.ConfimationUpdated:
+                case AuthenticatorState.ConfirmationUpdating:
+                case AuthenticatorState.ConfirmationUpdated:
                 case AuthenticatorState.ConfirmationProcessing:
                 case AuthenticatorState.ConfirmationProcessed:
                 case AuthenticatorState.SessionRefreshing:
@@ -840,7 +840,7 @@ namespace Authenticator
         private async Task ProcessSelectedConfirmation(ConfirmationAction action)
         {
             var operation = action.ToString();
-            var confirmation = GetSelecedConfirmation();
+            var confirmation = GetSelectedConfirmation();
             if (confirmation != null)
             {
                 SetStatusMessage($"{operation} Confirmation: ID({confirmation.ID})...");
@@ -860,7 +860,7 @@ namespace Authenticator
             return timeout;
         }
 
-        private ConfirmationItem GetSelecedConfirmation(ConfirmationStatus isNeedConfirmationStatus = ConfirmationStatus.Waiting)
+        private ConfirmationItem GetSelectedConfirmation(ConfirmationStatus isNeedConfirmationStatus = ConfirmationStatus.Waiting)
         {
             ConfirmationItem result = null;
             if (ConfirmationList.SelectedItem is ConfirmationItem confirmation)
@@ -878,7 +878,7 @@ namespace Authenticator
         {
             try
             {
-                if (String.IsNullOrEmpty(GuardCodeBox.Text) == false)
+                if (string.IsNullOrEmpty(GuardCodeBox.Text) == false)
                 {
                     Clipboard.SetText(GuardCodeBox.Text);
                 }
@@ -892,7 +892,7 @@ namespace Authenticator
         private void CancelToken(CancellationTokenSource source)
         {
             try
-            { 
+            {
                 if (source != null
                     && !source.IsCancellationRequested)
                 {
@@ -905,9 +905,10 @@ namespace Authenticator
             }
         }
 
-        private void ShowBallon(string message)
+        private void ShowBalloon(string message)
         {
-            TaskbarIcon.Dispatcher.Invoke(() => {
+            TaskbarIcon.Dispatcher.Invoke(() =>
+            {
                 if (TaskbarIcon.Visibility == Visibility.Visible && ShowNotificationMenu.IsChecked)
                 {
                     TaskbarIcon.ShowBalloonTip(Title, message, BalloonIcon.Info);

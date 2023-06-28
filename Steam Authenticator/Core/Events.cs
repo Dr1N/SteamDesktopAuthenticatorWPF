@@ -14,7 +14,7 @@ namespace Authenticator.Core
             Result = result;
         }
     }
-    
+
     public class AuthLinkerEventArgs : EventArgs
     {
         public AuthenticatorLinker.LinkResult Result { get; private set; }
@@ -24,7 +24,7 @@ namespace Authenticator.Core
             Result = result;
         }
     }
-    
+
     public class AuthFinalizeEventArgs : EventArgs
     {
         public AuthenticatorLinker.FinalizeResult Result { get; private set; }

@@ -1,13 +1,6 @@
 ﻿using Authenticator.Core;
 using SteamAuth;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Data;
 
 namespace Authenticator
 {
@@ -44,14 +37,16 @@ namespace Authenticator
                 OnPropertyChanged("Status");
             }
         }
-        
+
         #endregion
 
         #region Life Cycle
 
-        public ConfirmationItem(ulong id, ulong key, int type, ulong creator) : base(id, key, type, creator) { }
+        public ConfirmationItem(ulong id, ulong key, int type, ulong creator)
+            : base(id, key, type, creator) { }
 
-        public ConfirmationItem (Confirmation confirmation) : base(confirmation.ID, confirmation.Key, confirmation.IntType, confirmation.Creator) { }
+        public ConfirmationItem(Confirmation confirmation)
+            : base(confirmation.ID, confirmation.Key, confirmation.IntType, confirmation.Creator) { }
 
         #endregion
 

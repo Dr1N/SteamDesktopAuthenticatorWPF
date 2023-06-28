@@ -54,7 +54,7 @@ namespace Authenticator
         private void RemoveAuthButton_Click(object sender, RoutedEventArgs e)
         {
             App.Logger.Trace("StartWindow.RemoveAuthButton");
-            AuthenticatorSettingsWindow authenticatorSettingsWindow = new AuthenticatorSettingsWindow(SettingMode.Deacivate);
+            AuthenticatorSettingsWindow authenticatorSettingsWindow = new AuthenticatorSettingsWindow(SettingMode.Deactivate);
             if (authenticatorSettingsWindow.ShowDialog() == true)
             {
                 MessageBoxResult result = MessageBox.Show("Deactivate Account Authenticator?", Title, MessageBoxButton.OKCancel, MessageBoxImage.Question);

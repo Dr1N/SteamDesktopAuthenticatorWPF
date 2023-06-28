@@ -25,7 +25,7 @@ namespace Authenticator
             { LoginResult.BadCredentials, "Incorrect username or password."},
             { LoginResult.NeedCaptcha, "Need Enter Captcha." },
             { LoginResult.Need2FA, "Invalid Code from mobile Authenticator" },
-            { LoginResult.NeedEmail, "Invalie Code from email" },
+            { LoginResult.NeedEmail, "Invalid Code from email" },
             { LoginResult.TooManyFailedLogins, "Too many login failures."},
         };
 
@@ -38,7 +38,7 @@ namespace Authenticator
             { AuthenticatorLinker.LinkResult.AuthenticatorPresent, "Your account is already linked to mobile Authenticator"},
         };
 
-        private readonly IDictionary<AuthenticatorLinker.FinalizeResult, string> FinaluzeMessage = new Dictionary<AuthenticatorLinker.FinalizeResult, string>()
+        private readonly IDictionary<AuthenticatorLinker.FinalizeResult, string> FinalizeMessage = new Dictionary<AuthenticatorLinker.FinalizeResult, string>()
         {
             { AuthenticatorLinker.FinalizeResult.Success, "Success" },
             { AuthenticatorLinker.FinalizeResult.BadSMSCode, "Bad SMS Code" },
@@ -108,7 +108,7 @@ namespace Authenticator
                 return;
             }
 
-            SetStatusValue("Loging...");
+            SetStatusValue("Loading...");
             await DisableUI();
             await Task.Delay(100); //TODO wtf?
 
@@ -154,7 +154,7 @@ namespace Authenticator
                     break;
                 case LoginResult.NeedCaptcha:
                     App.Logger.Info($"LoginWindow.AuthLoginEvent Captcha GID: {AuthWrapper.CaptchaGID}");
-                    if (SetCaptha(AuthWrapper.CaptchaGID) == true)
+                    if (SetCaptcha(AuthWrapper.CaptchaGID) == true)
                     {
                         AuthWrapper.Login();
                         return;
@@ -193,7 +193,7 @@ namespace Authenticator
                         string smsCode = "";
                         if (GetSmsCode(ref smsCode) == true)
                         {
-                            if (String.IsNullOrEmpty(smsCode) == false)
+                            if (string.IsNullOrEmpty(smsCode) == false)
                             {
                                 AuthWrapper.FinalizeAddAuthenticator(smsCode);
                                 return;
@@ -234,15 +234,15 @@ namespace Authenticator
 
         private bool IsValid()
         {
-            return String.IsNullOrEmpty(LoginBox.Text.Trim()) == false && String.IsNullOrEmpty(PasswordBox.Password.Trim()) == false;
+            return string.IsNullOrEmpty(LoginBox.Text.Trim()) == false && string.IsNullOrEmpty(PasswordBox.Password.Trim()) == false;
         }
 
         private MessageBoxResult ShowMessage<T>(T result)
         {
             if (typeof(T).IsEnum == false) return MessageBoxResult.None;
 
-            string message = "";
-            string caption = "";
+            var message = "";
+            var caption = "";
 
             if (result is LoginResult)
             {
@@ -268,11 +268,11 @@ namespace Authenticator
                 AuthenticatorLinker.FinalizeResult? key = result as AuthenticatorLinker.FinalizeResult?;
                 if (key.HasValue)
                 {
-                    FinaluzeMessage.TryGetValue(key.Value, out message);
+                    FinalizeMessage.TryGetValue(key.Value, out message);
                 }
             }
 
-            if (String.IsNullOrEmpty(caption) == false && String.IsNullOrEmpty(message) == false)
+            if (string.IsNullOrEmpty(caption) == false && string.IsNullOrEmpty(message) == false)
             {
                 return MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -311,7 +311,7 @@ namespace Authenticator
             return false;
         }
 
-        private bool SetCaptha(string gid)
+        private bool SetCaptcha(string gid)
         {
             if (AuthWrapper.RequiresCaptcha == false) return false;
 
@@ -356,7 +356,7 @@ namespace Authenticator
 
         private bool GetSmsCode(ref string code)
         {
-            SimpleDialogWindow dlg = new SimpleDialogWindow("Ente Code From SMS") { Owner = this };
+            SimpleDialogWindow dlg = new SimpleDialogWindow("Enter Code From SMS") { Owner = this };
             if (dlg?.ShowDialog() == true)
             {
                 code = dlg.Answer;
@@ -384,8 +384,8 @@ namespace Authenticator
                 LoginBox.IsEnabled = true;
                 PasswordBox.IsEnabled = true;
                 SetWindowLabels();
-                LoginBox.Text = String.Empty;
-                PasswordBox.Password = String.Empty;
+                LoginBox.Text = string.Empty;
+                PasswordBox.Password = string.Empty;
                 SetStatusValue("Enter your login and password");
             }, DispatcherPriority.Send);
         }

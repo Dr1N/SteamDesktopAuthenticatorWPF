@@ -59,7 +59,7 @@ namespace Authenticator
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 DragMove();
-            }           
+            }
         }
     }
 }

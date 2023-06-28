@@ -9,8 +9,8 @@ namespace Authenticator
     {
         #region Constants
 
-        private readonly int MaxAttemps = 5;
-        
+        private readonly int MaxAttempts = 5;
+
         #endregion
 
         #region Events
@@ -32,7 +32,7 @@ namespace Authenticator
 
         private UserLogin _userLogin;
         private UserLogin UserLogin => _userLogin;
-        
+
         public bool RequiresCaptcha
         {
             get
@@ -114,8 +114,7 @@ namespace Authenticator
         #region Wrapped Linker Properties
 
         private AuthenticatorLinker _linker;
-        private AuthenticatorLinker Linker => _linker;
-        
+
         public string PhoneNumber
         {
             get
@@ -166,7 +165,7 @@ namespace Authenticator
         public void Login()
         {
             App.Logger.Info($"AuthWrapper.Login...");
-            if (String.IsNullOrEmpty(Username) || String.IsNullOrEmpty(Password))
+            if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
             {
                 throw new Exception($"{nameof(Username)} or {nameof(Password)} is empty");
             }
@@ -178,7 +177,8 @@ namespace Authenticator
         public Task LoginAsync()
         {
             App.Logger.Info($"AuthWrapper.LoginAsync...");
-            return Task.Run(() => {
+            return Task.Run(() =>
+            {
                 Login();
             });
         }
@@ -207,9 +207,9 @@ namespace Authenticator
                     {
                         userLogin.TwoFactorCode = account.GenerateSteamGuardCode();
                     }
-                    else if (counter >= MaxAttemps)
+                    else if (counter >= MaxAttempts)
                     {
-                        App.Logger.Warn($"AuthWrapper.Relogin Attemps: {counter}");
+                        App.Logger.Warn($"AuthWrapper.Relogin Attempts: {counter}");
                         break;
                     }
                 }
@@ -228,7 +228,8 @@ namespace Authenticator
         public Task<bool> ReloginAsync(SteamGuardAccount account, string password)
         {
             App.Logger.Trace($"AuthWrapper.ReloginAsync");
-            return Task.Run(async () => {
+            return Task.Run(async () =>
+            {
                 bool result = false;
                 try
                 {
@@ -251,9 +252,9 @@ namespace Authenticator
                         {
                             userLogin.TwoFactorCode = account.GenerateSteamGuardCode();
                         }
-                        else if (counter >= MaxAttemps)
+                        else if (counter >= MaxAttempts)
                         {
-                            App.Logger.Warn($"AuthWrapper.ReloginAsync Max Attemps: {counter}");
+                            App.Logger.Warn($"AuthWrapper.ReloginAsync Max Attempts: {counter}");
                             break;
                         }
                         await Task.Delay(1000);

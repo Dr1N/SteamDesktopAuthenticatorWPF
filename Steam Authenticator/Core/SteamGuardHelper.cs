@@ -20,7 +20,7 @@ namespace Authenticator
 
         public void Initialize(string filePath)
         {
-            if (String.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
             {
                 throw new ArgumentException($"Invalid account file path [{Path.GetDirectoryName(filePath)}]", nameof(filePath));
             }
@@ -32,11 +32,11 @@ namespace Authenticator
         private SteamGuardAccount CreateSteamGuardAccountFromFilePath(string filePath)
         {
             SteamGuardAccount result = null;
-            if (!String.IsNullOrEmpty(filePath) && File.Exists(filePath))
+            if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
             {
                 result = JsonConvert.DeserializeObject<SteamGuardAccount>(File.ReadAllText(filePath));
             }
-   
+
             return result;
         }
     }

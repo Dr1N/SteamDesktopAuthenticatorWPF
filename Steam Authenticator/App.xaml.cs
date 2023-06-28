@@ -101,7 +101,7 @@ namespace Authenticator
             }
             catch (Exception ex)
             {
-                Logger.Error($"App.GetSEttings Error: {ex.Message}");
+                Logger.Error($"App.GetSettings Error: {ex.Message}");
                 return null;
             }
         }

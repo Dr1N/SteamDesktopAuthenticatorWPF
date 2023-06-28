@@ -19,7 +19,7 @@ namespace Authenticator
         public void Save(string path = "")
         {
             string settingStr = JsonConvert.SerializeObject(this, Formatting.Indented);
-            string currentPath = String.IsNullOrEmpty(path) == false ? path : DefaultPath;
+            string currentPath = string.IsNullOrEmpty(path) == false ? path : DefaultPath;
             File.WriteAllText(currentPath, settingStr, Encoding.UTF8);
         }
 
@@ -28,7 +28,7 @@ namespace Authenticator
             Settings result = null;
             try
             {
-                string currentPath = String.IsNullOrEmpty(path) == false ? path : DefaultPath;
+                string currentPath = string.IsNullOrEmpty(path) == false ? path : DefaultPath;
                 if (File.Exists(currentPath) == true)
                 {
                     result = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(currentPath));
@@ -44,7 +44,7 @@ namespace Authenticator
 
         public static void Clear(string path = "")
         {
-            string currentPath = String.IsNullOrEmpty(path) == false ? path : DefaultPath;
+            string currentPath = string.IsNullOrEmpty(path) == false ? path : DefaultPath;
             if (File.Exists(currentPath) == true && currentPath.EndsWith(".json"))
             {
                 File.Delete(currentPath);

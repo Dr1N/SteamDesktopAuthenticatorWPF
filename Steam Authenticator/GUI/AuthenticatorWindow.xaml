@@ -45,7 +45,7 @@
                       Header="Decline"
                       Click="DeclineMenu_Click"/>
         </ContextMenu>
-        <tb:TaskbarIcon x:Key="AuthenticatorNotyfyIcon"
+        <tb:TaskbarIcon x:Key="AuthenticatorNotifyIcon"
                         IconSource="/Resources/Images/icon.ico"
                         MenuActivation="RightClick"
                         NoLeftClickDelay="True"

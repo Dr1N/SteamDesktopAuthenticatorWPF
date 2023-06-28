@@ -42,15 +42,15 @@ namespace Authenticator.Core
         private bool _isUpdateInProcess = false;
         public bool UpdateInProcess => _isUpdateInProcess;
 
-        private bool _isConirmationInProcess = false;
-        public bool ConfirmationsPocessed => _isConirmationInProcess;
+        private bool _isConfirmationInProcess = false;
+        public bool ConfirmationsProcess => _isConfirmationInProcess;
 
         private bool _isAutoUpdate = false;
         public bool AutoUpdate => _isAutoUpdate;
 
         private bool _isAutoConfirm = false;
         public bool AutoConfirm => _isAutoConfirm;
-        
+
         private int _timeout;
         public int Timeout => _timeout;
 
@@ -83,9 +83,9 @@ namespace Authenticator.Core
 
         private SemaphoreSlim _updateSemaphore;
         private SemaphoreSlim _confirmationSemaphore;
-        private SemaphoreSlim _autoupdateSemaphore;
+        private SemaphoreSlim _autoUpdateSemaphore;
 
-        private CancellationTokenSource _autocancellationTokenSource;
+        private CancellationTokenSource _autoCancellationTokenSource;
         private bool _isAutoStarted;
 
         #endregion
@@ -94,14 +94,13 @@ namespace Authenticator.Core
 
         public Authenticator(string path, string password)
         {
-            if (String.IsNullOrEmpty(password.Trim())) throw new ArgumentNullException(nameof(password));
-            if (String.IsNullOrEmpty(path.Trim())) throw new ArgumentNullException(nameof(path));
+            if (string.IsNullOrEmpty(password.Trim())) throw new ArgumentNullException(nameof(password));
+            if (string.IsNullOrEmpty(path.Trim())) throw new ArgumentNullException(nameof(path));
 
             _updateSemaphore = new SemaphoreSlim(1, 1);
             _confirmationSemaphore = new SemaphoreSlim(1, 1);
-            _autoupdateSemaphore = new SemaphoreSlim(1, 1);
+            _autoUpdateSemaphore = new SemaphoreSlim(1, 1);
 
-            //Collection Synhronization
             BindingOperations.EnableCollectionSynchronization(_confirmations, _collectionLock);
 
             _password = password;
@@ -119,8 +118,8 @@ namespace Authenticator.Core
             if (_isAutoUpdate)
             {
                 _isAutoStarted = true;
-                _autocancellationTokenSource = new CancellationTokenSource();
-                StartConfirmationAsync(_timeout, _isAutoConfirm, ConfirmationAction.Accept, _autocancellationTokenSource.Token);
+                _autoCancellationTokenSource = new CancellationTokenSource();
+                StartConfirmationAsync(_timeout, _isAutoConfirm, ConfirmationAction.Accept, _autoCancellationTokenSource.Token);
             }
         }
 
@@ -131,16 +130,17 @@ namespace Authenticator.Core
         public Task StartConfirmationAsync(int timeout, bool autoConfirm, ConfirmationAction action, CancellationToken cancellationToken)
         {
             App.Logger.Info($"Authenticator.StartConfirmation: confirm [{autoConfirm}] action [{action}] timeout [{timeout}]");
-            if (!_isAutoStarted 
-                && _autocancellationTokenSource != null 
-                && !_autocancellationTokenSource.IsCancellationRequested)
+            if (!_isAutoStarted
+                && _autoCancellationTokenSource != null
+                && !_autoCancellationTokenSource.IsCancellationRequested)
             {
-                _autocancellationTokenSource.Cancel();
+                _autoCancellationTokenSource.Cancel();
             }
             _isAutoStarted = false;
 
-            return Task.Run(async () => {
-                _autoupdateSemaphore.Wait();
+            return Task.Run(async () =>
+            {
+                _autoUpdateSemaphore.Wait();
                 _isAutoUpdate = true;
                 _isAutoConfirm = autoConfirm;
                 _timeout = timeout;
@@ -184,7 +184,7 @@ namespace Authenticator.Core
                 }
                 _isAutoUpdate = false;
                 State = error ? AuthenticatorState.Error : AuthenticatorState.Ready;
-                _autoupdateSemaphore.Release();
+                _autoUpdateSemaphore.Release();
             });
         }
 
@@ -195,7 +195,7 @@ namespace Authenticator.Core
             {
                 return App.SteamGuardHelper.CurrentSteamGuard.GenerateSteamGuardCodeForTime(steamTime);
             }
-            return String.Empty;
+            return string.Empty;
         }
 
         public async Task<int> GetSecondsUntilChangeAsync()
@@ -208,19 +208,19 @@ namespace Authenticator.Core
 
         public Task<bool> UpdateConfirmationsAsync()
         {
-            return Task.Run(async () => 
+            return Task.Run(async () =>
             {
                 try
                 {
                     _updateSemaphore.Wait();
                     _isUpdateInProcess = true;
                     App.Logger.Trace($"Authenticator.UpdateConfirmations");
-                    State = AuthenticatorState.ConfimationUpdating;
+                    State = AuthenticatorState.ConfirmationUpdating;
                     int beforeCount = ConfirmationsSource.Count;
-                    if (await GetConfitmations())
+                    if (await GetConfirmations())
                     {
                         App.Logger.Info($"Authenticator.UpdateConfirmationsAsync Success. Confirmations: ({ConfirmationsSource.Count}) Added: [{ConfirmationsSource.Count - beforeCount}]");
-                        State = AuthenticatorState.ConfimationUpdated;
+                        State = AuthenticatorState.ConfirmationUpdated;
                         _lastUpdate = DateTime.Now;
                         ConfirmationsEvent.Invoke(this, new AuthenticatorConfirmationsEventArgs(ConfirmationActionResult.Added, ConfirmationsSource.Count - beforeCount));
 
@@ -229,7 +229,7 @@ namespace Authenticator.Core
                     else
                     {
                         App.Logger.Error($"Authenticator.UpdateConfirmationsAsync Error");
-                        State = AuthenticatorState.ConfimationError;
+                        State = AuthenticatorState.ConfirmationError;
 
                         return false;
                     }
@@ -244,9 +244,10 @@ namespace Authenticator.Core
 
         public Task<bool> ProcessConfirmationsAsync(IEnumerable<ConfirmationItem> confirmations, ConfirmationAction action, CancellationToken cancellationToken)
         {
-            return Task.Run(async () => {
+            return Task.Run(async () =>
+            {
                 _confirmationSemaphore.Wait();
-                _isConirmationInProcess = true;
+                _isConfirmationInProcess = true;
                 bool success = true;
                 try
                 {
@@ -283,7 +284,7 @@ namespace Authenticator.Core
                 finally
                 {
                     State = AuthenticatorState.ConfirmationProcessed;
-                    _isConirmationInProcess = false;
+                    _isConfirmationInProcess = false;
                     _confirmationSemaphore.Release();
                 }
             });
@@ -291,7 +292,8 @@ namespace Authenticator.Core
 
         public Task<bool> ProcessConfirmationAsync(ConfirmationItem confirmation, ConfirmationAction action)
         {
-            return Task.Run(() => {
+            return Task.Run(() =>
+            {
                 confirmation.Status = ConfirmationStatus.Processing;
                 bool result = false;
                 var actionResult = ConfirmationActionResult.None;
@@ -299,7 +301,7 @@ namespace Authenticator.Core
                 {
                     result = App.SteamGuardHelper.CurrentSteamGuard.AcceptConfirmation(confirmation);
                     confirmation.Status = result ? ConfirmationStatus.Accepted : ConfirmationStatus.Unknow;
-                    actionResult = result  ? ConfirmationActionResult.Accept : ConfirmationActionResult.Error;
+                    actionResult = result ? ConfirmationActionResult.Accept : ConfirmationActionResult.Error;
                 }
                 else if (action == ConfirmationAction.Decline)
                 {
@@ -310,7 +312,7 @@ namespace Authenticator.Core
 
                 App.Logger.Info($"Authenticator.ProcessConfirmationAsync {action.ToString()}: {confirmation}\t" + (result == true ? "[success]" : "[error]"));
                 App.History.Write($"{confirmation} {action.ToString()}: {result}");
-                
+
                 ConfirmationEvent.Invoke(this, new AuthenticatorConfirmationEventArgs(actionResult, confirmation));
 
                 return result;
@@ -371,7 +373,7 @@ namespace Authenticator.Core
 
         #region Confirmation Methods
 
-        private async Task<bool> GetConfitmations()
+        private async Task<bool> GetConfirmations()
         {
             bool success = false;
             int counter = 0;
@@ -381,13 +383,13 @@ namespace Authenticator.Core
                 isNeedRepeat = false;
                 if (++counter > 3)
                 {
-                    App.Logger.Trace($"Authenticator.GetConfitmations Counter: [{counter}]");
+                    App.Logger.Trace($"Authenticator.GetConfirmations Counter: [{counter}]");
                     break;
                 }
                 try
                 {
                     Confirmation[] confirmations = await App.SteamGuardHelper.CurrentSteamGuard.FetchConfirmationsAsync();
-                    App.Logger.Info($"Authenticator.GetConfitmations Fetched: {confirmations.Length}");
+                    App.Logger.Info($"Authenticator.GetConfirmations Fetched: {confirmations.Length}");
                     foreach (var confirmation in confirmations)
                     {
                         ConfirmationItem item = new ConfirmationItem(confirmation) { Number = ConfirmationsSource.Count + 1 };
@@ -396,28 +398,28 @@ namespace Authenticator.Core
                             ConfirmationsSource.Add(item);
                             ConfirmationEvent.Invoke(this, new AuthenticatorConfirmationEventArgs(ConfirmationActionResult.Added, item));
                         }
-                        App.Logger.Trace($"Authenticator.GetConfitmations Added Confirmation: {item}");
+                        App.Logger.Trace($"Authenticator.GetConfirmations Added Confirmation: {item}");
                     }
                     success = true;
                 }
                 catch (SteamGuardAccount.WGTokenInvalidException ex)
                 {
-                    App.Logger.Warn($"Authenticator.GetConfitmations WGTokenInvalidException: {ex.Message}");
+                    App.Logger.Warn($"Authenticator.GetConfirmations WGTokenInvalidException: {ex.Message}");
                     isNeedRepeat = await RefreshSession();
                 }
                 catch (SteamGuardAccount.WGTokenExpiredException ex)
                 {
-                    App.Logger.Warn($"Authenticator.GetConfitmations WGTokenExpiredException: {ex.Message}");
+                    App.Logger.Warn($"Authenticator.GetConfirmations WGTokenExpiredException: {ex.Message}");
                     isNeedRepeat = await RefreshSession();
                 }
                 catch (WebException ex)
                 {
-                    App.Logger.Error($"Authenticator.GetConfitmations WebException: {ex.Message}");
+                    App.Logger.Error($"Authenticator.GetConfirmations WebException: {ex.Message}");
                     break;
                 }
                 catch (Exception ex)
                 {
-                    App.Logger.Error($"Authenticator.GetConfitmations Exception: {ex.Message}");
+                    App.Logger.Error($"Authenticator.GetConfirmations Exception: {ex.Message}");
                     break;
                 }
             } while (isNeedRepeat);
@@ -427,7 +429,7 @@ namespace Authenticator.Core
 
         private async Task<bool> RefreshSession()
         {
-            App.Logger.Trace($"Authenticato.RefreshSessionAsync");
+            App.Logger.Trace($"Authenticator.RefreshSessionAsync");
             State = AuthenticatorState.SessionRefreshing;
             bool sessionResult = await App.SteamGuardHelper.CurrentSteamGuard.RefreshSessionAsync();
             App.Logger.Info($"Authenticator.RefreshSessionAsync Result: {sessionResult}");
@@ -435,8 +437,8 @@ namespace Authenticator.Core
             if (sessionResult == false)
             {
                 State = AuthenticatorState.Relogin;
-                bool reloginResult = await App.AuthWrapper.ReloginAsync(App.SteamGuardHelper.CurrentSteamGuard, Password);
-                State = reloginResult ? AuthenticatorState.ReloginSuccess : AuthenticatorState.ReloginError;
+                bool reLoginResult = await App.AuthWrapper.ReloginAsync(App.SteamGuardHelper.CurrentSteamGuard, Password);
+                State = reLoginResult ? AuthenticatorState.ReloginSuccess : AuthenticatorState.ReloginError;
             }
             else
             {
@@ -460,8 +462,8 @@ namespace Authenticator.Core
                 {
                     _updateSemaphore?.Dispose();
                     _confirmationSemaphore?.Dispose();
-                    _autoupdateSemaphore?.Dispose();
-                    _autocancellationTokenSource?.Dispose();
+                    _autoUpdateSemaphore?.Dispose();
+                    _autoCancellationTokenSource?.Dispose();
                 }
 
                 disposedValue = true;

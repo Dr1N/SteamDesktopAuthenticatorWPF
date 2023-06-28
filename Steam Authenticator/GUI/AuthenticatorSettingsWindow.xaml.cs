@@ -8,7 +8,7 @@ namespace Authenticator
     public enum SettingMode
     {
         StartNew,
-        Deacivate,
+        Deactivate,
     }
 
     /// <summary>
@@ -52,7 +52,7 @@ namespace Authenticator
             {
                 msg += $" Selected File: [[{AccountFilePath}]]";
             }
-            App.Logger.Trace($"AuthenticatorSettingsWindow.Cloded: {msg}");
+            App.Logger.Trace($"AuthenticatorSettingsWindow.Closed: {msg}");
             base.OnClosed(e);
         }
 
@@ -88,7 +88,7 @@ namespace Authenticator
         private void SelectFileButton_Click(object sender, RoutedEventArgs e)
         {
             AccountFilePath = AskAccountFilePath();
-            FilePathBox.Content = String.IsNullOrEmpty(AccountFilePath) == false ? AccountFilePath : FilePrompt;
+            FilePathBox.Content = string.IsNullOrEmpty(AccountFilePath) == false ? AccountFilePath : FilePrompt;
         }
 
         #endregion
@@ -118,11 +118,11 @@ namespace Authenticator
             bool result = false;
             if (Mode == SettingMode.StartNew)
             {
-                result = String.IsNullOrEmpty(AccountFilePath) == false && String.IsNullOrEmpty(PasswordBox.Password.Trim()) == false;
+                result = string.IsNullOrEmpty(AccountFilePath) == false && string.IsNullOrEmpty(PasswordBox.Password.Trim()) == false;
             }
-            else if (Mode == SettingMode.Deacivate)
+            else if (Mode == SettingMode.Deactivate)
             {
-                result = String.IsNullOrEmpty(AccountFilePath) == false;
+                result = string.IsNullOrEmpty(AccountFilePath) == false;
             }
 
             return result;
