@@ -1,6 +1,7 @@
 ﻿using Authenticator.Core;
 using SteamAuth;
 using System.ComponentModel;
+using System.Windows.Input;
 
 namespace Authenticator
 {
@@ -20,7 +21,7 @@ namespace Authenticator
         public ulong DisplayID => ID;
         public ulong DisplayKey => Key;
         public ulong DisplayCreator => Creator;
-        public ConfirmationType DisplayType => ConfType;
+        public EMobileConfirmationType DisplayType => ConfType;
 
         #endregion
 
@@ -42,11 +43,21 @@ namespace Authenticator
 
         #region Life Cycle
 
-        public ConfirmationItem(ulong id, ulong key, int type, ulong creator)
-            : base(id, key, type, creator) { }
+        public ConfirmationItem(ulong id, ulong key, EMobileConfirmationType type, ulong creator)
+        {
+            ID = id;
+            Key = key;
+            ConfType = type;
+            Creator = creator;
+        }
 
         public ConfirmationItem(Confirmation confirmation)
-            : base(confirmation.ID, confirmation.Key, confirmation.IntType, confirmation.Creator) { }
+        {
+            ID = confirmation.ID;
+            Key = confirmation.Key;
+            ConfType = confirmation.ConfType;
+            Creator = confirmation.Creator;
+        }
 
         #endregion
 

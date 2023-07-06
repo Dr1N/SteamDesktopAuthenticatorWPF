@@ -115,8 +115,7 @@ namespace Authenticator
             string username = LoginBox.Text.Trim();
             string password = PasswordBox.Password.Trim();
 
-            AuthWrapper.SetUserCredentials(username, password);
-            AuthWrapper.Login();
+            await AuthWrapper.LoginAsync(username, password);
         }
 
         private async void AuthWrapper_AuthLoginEvent(object sender, AuthLoginEventArgs args)
@@ -331,8 +330,10 @@ namespace Authenticator
             if (dlg.ShowDialog() == true)
             {
                 AuthWrapper.PhoneNumber = dlg.Answer;
+
                 return true;
             }
+
             return false;
         }
 

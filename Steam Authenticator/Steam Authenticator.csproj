@@ -200,17 +200,23 @@
       <Version>13.0.3</Version>
     </PackageReference>
     <PackageReference Include="NLog">
-      <Version>5.2.0</Version>
+      <Version>5.2.2</Version>
     </PackageReference>
     <PackageReference Include="NLog.Schema">
-      <Version>5.2.0</Version>
+      <Version>5.2.2</Version>
     </PackageReference>
     <PackageReference Include="NumericUpDown">
       <Version>3.0.2</Version>
     </PackageReference>
-    <PackageReference Include="SteamAuth">
-      <Version>3.0.0</Version>
+    <PackageReference Include="SteamKit2">
+      <Version>2.5.0-Beta.1</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SteamAuth\SteamAuth.csproj">
+      <Project>{5ad0934e-f6c4-4ae5-83af-c788313b2a87}</Project>
+      <Name>SteamAuth</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

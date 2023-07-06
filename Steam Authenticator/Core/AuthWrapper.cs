@@ -1,5 +1,9 @@
 ﻿using Authenticator.Core;
+using Newtonsoft.Json;
 using SteamAuth;
+using SteamKit2;
+using SteamKit2.Authentication;
+using SteamKit2.Internal;
 using System;
 using System.Threading.Tasks;
 
@@ -7,111 +11,17 @@ namespace Authenticator
 {
     public class AuthWrapper
     {
-        #region Constants
-
-        private readonly int MaxAttempts = 5;
-
-        #endregion
-
-        #region Events
-
         public event EventHandler<AuthLoginEventArgs> AuthLoginEvent;
         public event EventHandler<AuthLinkerEventArgs> AuthLinkerEvent;
         public event EventHandler<AuthFinalizeEventArgs> AuthFinalizeEvent;
 
-        #endregion
+        public SteamGuardAccount LinkedAccount => _linker.LinkedAccount;
 
-        #region Properties
+        public SessionData Session { get; private set; }
 
         private string Username { get; set; }
+
         private string Password { get; set; }
-
-        #endregion
-
-        #region Wrapped Login Properties
-
-        private UserLogin _userLogin;
-        private UserLogin UserLogin => _userLogin;
-
-        public bool RequiresCaptcha
-        {
-            get
-            {
-                return _userLogin.RequiresCaptcha;
-            }
-        }
-
-        public string CaptchaGID
-        {
-            get
-            {
-                return _userLogin.CaptchaGID;
-            }
-        }
-
-        public string CaptchaText
-        {
-            get
-            {
-                return _userLogin.CaptchaText;
-            }
-            set
-            {
-                _userLogin.CaptchaText = value;
-            }
-        }
-
-        public bool RequiresEmail
-        {
-            get
-            {
-                return _userLogin.RequiresEmail;
-            }
-        }
-
-        public string EmailCode
-        {
-            get
-            {
-                return _userLogin.EmailCode;
-            }
-            set
-            {
-                _userLogin.EmailCode = value;
-            }
-        }
-
-        public bool Requires2FA
-        {
-            get
-            {
-                return _userLogin.Requires2FA;
-            }
-        }
-
-        public string TwoFactorCode
-        {
-            get
-            {
-                return _userLogin.TwoFactorCode;
-            }
-            set
-            {
-                _userLogin.TwoFactorCode = value;
-            }
-        }
-
-        public SessionData Session
-        {
-            get
-            {
-                return _userLogin.Session;
-            }
-        }
-
-        #endregion
-
-        #region Wrapped Linker Properties
 
         private AuthenticatorLinker _linker;
 
@@ -127,169 +37,109 @@ namespace Authenticator
             }
         }
 
-        public string DeviceID
-        {
-            get
-            {
-                return _linker.DeviceID;
-            }
-        }
-
-        public SteamGuardAccount LinkedAccount
-        {
-            get
-            {
-                return _linker.LinkedAccount;
-            }
-        }
-
-        public bool Finalized
-        {
-            get
-            {
-                return _linker.Finalized;
-            }
-        }
-
-        #endregion
-
-        #region Public Methods
-
-        public void SetUserCredentials(string username, string password)
-        {
-            _userLogin = new UserLogin(username, password);
-            Username = username;
-            Password = password;
-        }
-
-        public void Login()
+        public async Task LoginAsync(string username, string password)
         {
             App.Logger.Info($"AuthWrapper.Login...");
-            if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
+
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
                 throw new Exception($"{nameof(Username)} or {nameof(Password)} is empty");
             }
-            LoginResult response = UserLogin.DoLogin();
 
-            AuthLoginEvent?.Invoke(this, new AuthLoginEventArgs(response));
-        }
-
-        public Task LoginAsync()
-        {
-            App.Logger.Info($"AuthWrapper.LoginAsync...");
-            return Task.Run(() =>
-            {
-                Login();
-            });
-        }
-
-        public bool ReLogin(SteamGuardAccount account, string password)
-        {
-            App.Logger.Info($"AuthWrapper.Relogin...");
-            bool result = false;
             try
             {
-                int counter = 0;
-                UserLogin userLogin = new UserLogin(account.AccountName, password);
-                LoginResult response = LoginResult.BadCredentials;
-                while (true)
+                var steamClient = new SteamClient();
+                steamClient.Connect();
+
+                var authSession = await steamClient.Authentication.BeginAuthSessionViaCredentialsAsync(
+                    new AuthSessionDetails
+                    {
+                        Username = username,
+                        Password = password,
+                        IsPersistentSession = false,
+                        PlatformType = EAuthTokenPlatformType.k_EAuthTokenPlatformType_MobileApp,
+                        ClientOSType = EOSType.Android9,
+                        Authenticator = new UserConsoleAuthenticator(),
+                    });
+                var pollResponse = await authSession.PollingWaitForResultAsync();
+                var sessionData = new SessionData()
                 {
-                    counter++;
-                    response = userLogin.DoLogin();
-                    App.Logger.Info($"AuthWrapper.Relogin Response: {response}");
-                    if (response == LoginResult.LoginOkay)
+                    SteamID = authSession.SteamID.ConvertToUInt64(),
+                    AccessToken = pollResponse.AccessToken,
+                    RefreshToken = pollResponse.RefreshToken,
+                };
+
+                Username = username;
+                Password = password;
+                Session = new SessionData()
+                {
+                    SteamID = authSession.SteamID.ConvertToUInt64(),
+                    AccessToken = pollResponse.AccessToken,
+                    RefreshToken = pollResponse.RefreshToken,
+                };
+
+                AuthLoginEvent?.Invoke(this, new AuthLoginEventArgs(true));
+            }
+            catch (Exception ex)
+            {
+                App.Logger.Error($"AuthWrapper.Login: {ex.Message}");
+                AuthLoginEvent?.Invoke(this, new AuthLoginEventArgs(false));
+            }
+        }
+
+        public async Task<bool> ReloginAsync(SteamGuardAccount account, string password)
+        {
+            App.Logger.Info($"AuthWrapper.Relogin...");
+
+            var result = false;
+            try
+            {
+                var steamClient = new SteamClient();
+                steamClient.Connect();
+
+                var authSession = await steamClient.Authentication.BeginAuthSessionViaCredentialsAsync(
+                    new AuthSessionDetails
                     {
-                        account.Session = userLogin.Session;
-                        result = true;
-                        break;
-                    }
-                    else if (response == LoginResult.Need2FA)
-                    {
-                        userLogin.TwoFactorCode = account.GenerateSteamGuardCode();
-                    }
-                    else if (counter >= MaxAttempts)
-                    {
-                        App.Logger.Warn($"AuthWrapper.Relogin Attempts: {counter}");
-                        break;
-                    }
-                }
-                return result;
+                        Username = Username,
+                        Password = password,
+                        IsPersistentSession = false,
+                        PlatformType = EAuthTokenPlatformType.k_EAuthTokenPlatformType_MobileApp,
+                        ClientOSType = EOSType.Android9,
+                        Authenticator = new UserConsoleAuthenticator(),
+                        GuardData = JsonConvert.SerializeObject(account)
+                    });
+
+                var pollResponse = await authSession.PollingWaitForResultAsync();
+                result = true;
             }
             catch (Exception ex)
             {
                 App.Logger.Error($"AuthWrapper.Relogin Error: {ex.Message}");
-                result = false;
             }
+
             App.Logger.Info($"AuthWrapper.Relogin Result: {result}");
 
             return result;
         }
 
-        public Task<bool> ReloginAsync(SteamGuardAccount account, string password)
+        public async Task AddAuthenticator()
         {
-            App.Logger.Trace($"AuthWrapper.ReloginAsync");
-            return Task.Run(async () =>
-            {
-                bool result = false;
-                try
-                {
-                    int counter = 0;
-                    App.Logger.Trace($"AuthWrapper.ReloginAsync Try Relogin");
-                    UserLogin userLogin = new UserLogin(account.AccountName, password);
-                    LoginResult response = LoginResult.BadCredentials;
-                    while (true)
-                    {
-                        counter++;
-                        response = userLogin.DoLogin();
-                        App.Logger.Trace($"AuthWrapper.ReloginAsync Response: {response}");
-                        if (response == LoginResult.LoginOkay)
-                        {
-                            account.Session = userLogin.Session;
-                            result = true;
-                            break;
-                        }
-                        else if (response == LoginResult.Need2FA)
-                        {
-                            userLogin.TwoFactorCode = account.GenerateSteamGuardCode();
-                        }
-                        else if (counter >= MaxAttempts)
-                        {
-                            App.Logger.Warn($"AuthWrapper.ReloginAsync Max Attempts: {counter}");
-                            break;
-                        }
-                        await Task.Delay(1000);
-                    }
-                    return result;
-                }
-                catch (Exception ex)
-                {
-                    App.Logger.Error($"AuthWrapper.ReloginAsync Error: {ex.Message}");
-                    result = false;
-                }
-                App.Logger.Info($"AuthWrapper.ReloginAsync Result: {result}");
+            App.Logger.Info($"AuthWrapper.AddAuthenticator");
 
-                return result;
-            });
-        }
+            if (_linker == null) _linker = new AuthenticatorLinker(Session);
 
-        public void AddAuthenticator()
-        {
-            App.Logger.Info($"AuthWrapper.AddAuthenticator...");
-            if (_linker == null)
-            {
-                _linker = new AuthenticatorLinker(UserLogin.Session);
-            }
-            AuthenticatorLinker.LinkResult result = _linker.AddAuthenticator();
+            var result = await _linker.AddAuthenticator();
+
             AuthLinkerEvent?.Invoke(this, new AuthLinkerEventArgs(result));
         }
 
-        public void FinalizeAddAuthenticator(string smsCode)
+        public async Task FinalizeAddAuthenticator(string smsCode)
         {
-            App.Logger.Info($"AuthWrapper.FinalizeAddAuthenticator...");
-            AuthenticatorLinker.FinalizeResult result = _linker.FinalizeAddAuthenticator(smsCode);
+            App.Logger.Info($"AuthWrapper.FinalizeAddAuthenticator");
+
+            AuthenticatorLinker.FinalizeResult result = await _linker.FinalizeAddAuthenticator(smsCode);
+
             AuthFinalizeEvent?.Invoke(this, new AuthFinalizeEventArgs(result));
         }
-
-        #endregion
     }
 }

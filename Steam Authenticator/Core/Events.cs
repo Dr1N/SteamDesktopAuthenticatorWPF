@@ -7,9 +7,9 @@ namespace Authenticator.Core
 
     public class AuthLoginEventArgs : EventArgs
     {
-        public LoginResult Result { get; private set; }
+        public bool Result { get; private set; }
 
-        public AuthLoginEventArgs(LoginResult result)
+        public AuthLoginEventArgs(bool result)
         {
             Result = result;
         }

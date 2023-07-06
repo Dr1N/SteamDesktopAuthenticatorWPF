@@ -437,7 +437,7 @@ namespace Authenticator.Core
             if (sessionResult == false)
             {
                 State = AuthenticatorState.Relogin;
-                bool reLoginResult = await App.AuthWrapper.ReloginAsync(App.SteamGuardHelper.CurrentSteamGuard, Password);
+                var reLoginResult = await App.AuthWrapper.ReloginAsync(App.SteamGuardHelper.CurrentSteamGuard, Password);
                 State = reLoginResult ? AuthenticatorState.ReloginSuccess : AuthenticatorState.ReloginError;
             }
             else
